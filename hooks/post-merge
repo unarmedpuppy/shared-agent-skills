@@ -1,0 +1,31 @@
+#!/bin/bash
+#
+# post-merge hook for consuming repositories
+# 
+# This hook runs after `git pull` and:
+# 1. Updates @jenquist/shared-agent-skills to latest
+# 2. Re-links skills to .claude/skills/
+#
+# Installation:
+#   cp node_modules/@jenquist/shared-agent-skills/hooks/post-merge .git/hooks/
+#   chmod +x .git/hooks/post-merge
+#
+# Or use the install script:
+#   npx install-skill-hooks
+
+set -e
+
+echo "==> post-merge: Updating shared skills..."
+
+# Check if package.json has our dependency
+if grep -q "@jenquist/shared-agent-skills" package.json 2>/dev/null; then
+  # Update to latest
+  npm update @jenquist/shared-agent-skills --silent
+  
+  # Re-link skills
+  npx link-skills --verbose
+  
+  echo "==> Shared skills updated successfully"
+else
+  echo "==> Skipping: @jenquist/shared-agent-skills not in dependencies"
+fi

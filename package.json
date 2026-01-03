@@ -1,0 +1,36 @@
+{
+  "name": "@jenquist/shared-agent-skills",
+  "version": "0.1.0",
+  "description": "Shared AI agent skills for cross-repository use. Published via Harbor registry.",
+  "main": "index.js",
+  "bin": {
+    "link-skills": "./bin/link-skills.js",
+    "install-skill-hooks": "./bin/install-hooks.js"
+  },
+  "scripts": {
+    "link": "node bin/link-skills.js",
+    "validate": "node bin/validate-skills.js",
+    "publish:harbor": "npm publish --registry https://harbor.server.unarmedpuppy.com/npm/"
+  },
+  "files": [
+    "skills/**",
+    "bin/**",
+    "hooks/**",
+    "index.js"
+  ],
+  "keywords": [
+    "ai-agents",
+    "claude",
+    "skills",
+    "prompts"
+  ],
+  "author": "Joshua Jenquist",
+  "license": "MIT",
+  "publishConfig": {
+    "registry": "https://harbor.server.unarmedpuppy.com/npm/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/joshuajenquist/shared-agent-skills.git"
+  }
+}
