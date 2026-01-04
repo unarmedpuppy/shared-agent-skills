@@ -1,7 +1,7 @@
 {
-  "name": "@jenquist/shared-agent-skills",
+  "name": "shared-agent-skills",
   "version": "0.2.0",
-  "description": "Shared AI agent skills for cross-repository use. Published via Harbor registry.",
+  "description": "Shared AI agent skills for cross-repository use. Published via Gitea package registry.",
   "main": "index.js",
   "bin": {
     "link-skills": "./bin/link-skills.js",
@@ -10,7 +10,7 @@
   "scripts": {
     "link": "node bin/link-skills.js",
     "validate": "node bin/validate-skills.js",
-    "publish:harbor": "npm publish --registry https://harbor.server.unarmedpuppy.com/npm/"
+    "publish:gitea": "npm publish --registry https://gitea.server.unarmedpuppy.com/api/packages/unarmedpuppy/npm/"
   },
   "files": [
     "skills/**",
@@ -27,10 +27,10 @@
   "author": "Joshua Jenquist",
   "license": "MIT",
   "publishConfig": {
-    "registry": "https://harbor.server.unarmedpuppy.com/npm/"
+    "registry": "https://gitea.server.unarmedpuppy.com/api/packages/unarmedpuppy/npm/"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/joshuajenquist/shared-agent-skills.git"
+    "url": "ssh://git@192.168.86.47:2223/unarmedpuppy/shared-agent-skills.git"
   }
 }
