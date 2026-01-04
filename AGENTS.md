@@ -1,44 +1,75 @@
 # Shared Agent Skills
 
-Shared AI agent skills for cross-repository use. Published via Harbor npm registry.
+Shared AI agent skills for cross-repository use. Published via Gitea package registry.
 
 ## Overview
 
-This repository contains reusable agent skills that can be consumed by any project via npm. Skills are automatically linked into consuming repos via git hooks.
+This repository contains reusable agent skills that can be consumed by any project via npm. Skills are symlinked into consuming repos for Claude auto-discovery.
 
-**Package**: `@jenquist/shared-agent-skills`  
-**Registry**: `harbor.server.unarmedpuppy.com/npm/`
+**Package**: `shared-agent-skills`  
+**Registry**: Gitea (`gitea.server.unarmedpuppy.com`)  
+**Git**: `ssh://git@192.168.86.47:2223/unarmedpuppy/shared-agent-skills.git`
 
-## Quick Start
+## Installing in a Repo
 
-### For Consumers
+### Quick Setup
 
 ```bash
-# Install the package
-npm install @jenquist/shared-agent-skills --registry https://harbor.server.unarmedpuppy.com/npm/
+# If no package.json exists
+npm init -y
 
-# Link skills to .claude/skills/
+# Install from git (recommended - no auth needed)
+npm install git+ssh://git@192.168.86.47:2223/unarmedpuppy/shared-agent-skills.git
+
+# Create .claude/skills/ symlinks
 npx link-skills
 
-# Install git hook for auto-updates
-npx install-skill-hooks
+# Add to .gitignore
+echo -e "\nnode_modules/\npackage-lock.json" >> .gitignore
+
+# Commit
+git add .gitignore package.json .claude/
+git commit -m "feat: add shared-agent-skills"
 ```
 
-After setup, skills auto-update on every `git pull`.
+### What Gets Created
 
-### For Contributors
+```
+your-repo/
+├── package.json              # tracks dependency
+├── node_modules/             # gitignored
+│   └── @jenquist/shared-agent-skills/
+└── .claude/skills/           # committed (symlinks)
+    ├── plan-creator.md → ../../node_modules/.../SKILL.md
+    ├── http-api-requests.md
+    ├── terminal-ui-design.md
+    ├── skill-creator.md
+    ├── setup-gitea-workflow.md
+    └── beads-task-management.md
+```
+
+### Updating Skills
 
 ```bash
-# Clone this repo
-cd ~/repos/personal/shared-agent-skills
+npm update
+npx link-skills  # recreate symlinks if new skills added
+```
 
-# Add a new skill
-mkdir -p skills/my-skill
-# Create skills/my-skill/SKILL.md with proper frontmatter
+### After Cloning (on another machine)
 
-# Publish new version
-npm version patch
-npm run publish:harbor
+```bash
+npm install      # restores node_modules
+npx link-skills  # recreates symlinks
+```
+
+## Alternative: Install from Gitea Registry
+
+```bash
+# Add auth token to ~/.npmrc (create token at Gitea → Settings → Applications)
+echo "//gitea.server.unarmedpuppy.com/api/packages/unarmedpuppy/npm/:_authToken=YOUR_TOKEN" >> ~/.npmrc
+
+# Install from registry
+npm install shared-agent-skills --registry https://gitea.server.unarmedpuppy.com/api/packages/unarmedpuppy/npm/
 ```
 
 ## Directory Structure
@@ -46,18 +77,25 @@ npm run publish:harbor
 ```
 shared-agent-skills/
 ├── skills/                  # Shared skills
-│   ├── beads-task-management/
+│   ├── plan-creator/
+│   │   ├── SKILL.md
+│   │   ├── scripts/
+│   │   └── templates/
+│   ├── http-api-requests/
+│   │   └── SKILL.md
+│   ├── terminal-ui-design/
 │   │   └── SKILL.md
 │   ├── skill-creator/
 │   │   └── SKILL.md
-│   └── ...
+│   ├── setup-gitea-workflow/
+│   │   └── SKILL.md
+│   └── beads-task-management/
+│       └── SKILL.md
 ├── bin/                     # CLI tools
 │   ├── link-skills.js       # Symlink generator
 │   └── install-hooks.js     # Git hook installer
 ├── hooks/                   # Git hook templates
 │   └── post-merge           # Auto-update on pull
-├── agents/                  # Agent documentation
-│   └── plans/               # Implementation plans
 ├── package.json
 ├── index.js                 # Programmatic API
 └── AGENTS.md                # This file
@@ -71,22 +109,40 @@ shared-agent-skills/
 | `npx link-skills --check` | Verify symlinks are correct |
 | `npx link-skills --clean` | Remove managed symlinks |
 | `npx link-skills --list` | List available skills |
+| `npx link-skills --target DIR` | Custom target directory |
 | `npx install-skill-hooks` | Install post-merge hook |
 
 ## How It Works
 
-1. **Publishing**: Skills are packaged and published to Harbor npm registry
-2. **Installation**: Consuming repos install as npm dependency
-3. **Linking**: `npx link-skills` creates symlinks from `.claude/skills/` to `node_modules/`
-4. **Auto-update**: Post-merge hook runs `npm update` + `link-skills` on every `git pull`
+### How `npx link-skills` works
 
-```
-git pull
-  └─> .git/hooks/post-merge
-        ├─> npm update @jenquist/shared-agent-skills
-        └─> npx link-skills
-              └─> .claude/skills/*.md → node_modules/.../skills/*/SKILL.md
-```
+1. **bin field in package.json** tells npm to expose the command:
+   ```json
+   "bin": { "link-skills": "./bin/link-skills.js" }
+   ```
+
+2. **npm creates a symlink** in `node_modules/.bin/`:
+   ```
+   node_modules/.bin/link-skills → ../shared-agent-skills/bin/link-skills.js
+   ```
+
+3. **The script**:
+   - Finds skills in `node_modules/.../skills/`
+   - Creates `.claude/skills/` directory
+   - Creates relative symlinks: `.claude/skills/plan-creator.md → ../../node_modules/.../SKILL.md`
+
+4. **Relative symlinks** work on any machine - when someone clones and runs `npm install`, symlinks still resolve.
+
+## Available Skills
+
+| Skill | Description |
+|-------|-------------|
+| `plan-creator` | Create implementation plans with interactive wizard, validation, and export |
+| `http-api-requests` | curl-based HTTP request patterns for APIs |
+| `terminal-ui-design` | TUI design guidelines and best practices |
+| `skill-creator` | Create new agent skills following standard format |
+| `setup-gitea-workflow` | Set up Gitea Actions CI/CD for Docker builds |
+| `beads-task-management` | Manage tasks with Beads distributed issue tracker |
 
 ## Adding New Skills
 
@@ -113,13 +169,20 @@ Instructions here...
 
 ```bash
 npm run link -- --verbose
+npx link-skills --list
 ```
 
 ### 4. Publish
 
 ```bash
+# Bump version
 npm version patch  # or minor/major
-npm run publish:harbor
+
+# Push to git (consumers using git install get updates automatically)
+git push
+
+# Optionally publish to Gitea registry
+npm run publish:gitea
 ```
 
 ## Skill Format
@@ -130,40 +193,6 @@ Skills follow the [Anthropic Skills Specification](https://github.com/anthropics
 - **name**: hyphen-case, max 64 characters, matches directory
 - **description**: Must include "Use when..." trigger
 - Optional: `scripts/`, `references/`, `assets/`
-
-## Available Skills
-
-| Skill | Description |
-|-------|-------------|
-| `beads-task-management` | Manage tasks with Beads distributed issue tracker |
-| `skill-creator` | Create new agent skills following standard format |
-
-## Consuming Repos Setup
-
-### Initial Setup
-
-```bash
-# Add to package.json
-npm install @jenquist/shared-agent-skills --save-dev \
-  --registry https://harbor.server.unarmedpuppy.com/npm/
-
-# Link skills
-npx link-skills
-
-# Install auto-update hook
-npx install-skill-hooks
-
-# Commit
-git add .
-git commit -m "feat: add shared agent skills"
-```
-
-### Manual Update
-
-```bash
-npm update @jenquist/shared-agent-skills
-npx link-skills
-```
 
 ## Boundaries
 
@@ -183,31 +212,40 @@ npx link-skills
 
 ## Troubleshooting
 
-### "Package not found"
+### "Package not found" after git install
 
-Ensure Harbor registry is configured:
+Ensure SSH key is configured for Gitea access:
 ```bash
-npm config set @jenquist:registry https://harbor.server.unarmedpuppy.com/npm/
+ssh -T git@192.168.86.47 -p 2223
+```
+
+### "Symlinks broken after npm install"
+
+Re-run link-skills:
+```bash
+npx link-skills
+```
+
+### "Command not found: link-skills"
+
+Ensure package is installed:
+```bash
+npm install
+npx link-skills
 ```
 
 ### "Symlinks not working on Windows"
 
 Enable Developer Mode or run as Administrator.
 
-### "Hook not running"
+## Publishing to Gitea Registry
 
-Check hook is executable:
 ```bash
-chmod +x .git/hooks/post-merge
+# One-time: Add auth token to ~/.npmrc
+# Create token at: https://gitea.server.unarmedpuppy.com/user/settings/applications
+# Select "package:write" scope
+echo "//gitea.server.unarmedpuppy.com/api/packages/unarmedpuppy/npm/:_authToken=YOUR_TOKEN" >> ~/.npmrc
+
+# Publish
+npm run publish:gitea
 ```
-
-## Harbor Registry
-
-**URL**: https://harbor.server.unarmedpuppy.com  
-**NPM endpoint**: https://harbor.server.unarmedpuppy.com/npm/
-
-To publish:
-1. Login to Harbor
-2. Create robot account with push permissions
-3. `npm login --registry https://harbor.server.unarmedpuppy.com/npm/`
-4. `npm publish`
