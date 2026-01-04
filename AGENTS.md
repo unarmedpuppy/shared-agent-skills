@@ -1,20 +1,19 @@
 # Shared Agent Skills
 
-Shared AI agent skills for cross-repository use.
+npm package containing reusable agent skills for cross-repository use.
 
-## Overview
+**Git**: `ssh://git@192.168.86.47:2223/unarmedpuppy/shared-agent-skills.git`  
+**Registry**: `gitea.server.unarmedpuppy.com`
 
-This repository contains reusable agent skills that can be consumed by any project via npm. Skills are symlinked into consuming repos for Claude auto-discovery.
+## Installing This Package
 
-**Package**: `shared-agent-skills`  
-**Registry**: Gitea (`gitea.server.unarmedpuppy.com`)  
-**Git**: `ssh://git@192.168.86.47:2223/unarmedpuppy/shared-agent-skills.git`
+See [personal/agents/reference/shared-skills.md](../agents/reference/shared-skills.md)
 
 ## Directory Structure
 
 ```
 shared-agent-skills/
-├── skills/                  # Shared skills
+├── skills/                  # The skills (this is the content)
 │   ├── plan-creator/
 │   ├── http-api-requests/
 │   ├── terminal-ui-design/
@@ -22,51 +21,67 @@ shared-agent-skills/
 │   ├── setup-gitea-workflow/
 │   └── beads-task-management/
 ├── bin/                     # CLI tools
-│   ├── link-skills.js
-│   └── install-hooks.js
-├── hooks/                   # Git hook templates
-├── agents/
-│   ├── reference/
-│   │   └── installation.md  # How to install in other repos
-│   └── plans/
-└── package.json
+│   ├── link-skills.js       # Creates symlinks in consuming repos
+│   └── install-hooks.js     # Installs git hooks
+├── hooks/
+│   └── post-merge           # Auto-update hook template
+├── package.json
+└── index.js
 ```
 
-## Available Skills
+## Adding a New Skill
 
-| Skill | Description |
-|-------|-------------|
-| `plan-creator` | Create implementation plans with interactive wizard, validation, and export |
-| `http-api-requests` | curl-based HTTP request patterns for APIs |
-| `terminal-ui-design` | TUI design guidelines and best practices |
-| `skill-creator` | Create new agent skills following standard format |
-| `setup-gitea-workflow` | Set up Gitea Actions CI/CD for Docker builds |
-| `beads-task-management` | Manage tasks with Beads distributed issue tracker |
-
-## Quick Reference
-
-### Install in another repo
-
-See [agents/reference/installation.md](agents/reference/installation.md)
-
-```bash
-npm init -y
-npm install git+ssh://git@192.168.86.47:2223/unarmedpuppy/shared-agent-skills.git
-npx link-skills
-```
-
-### Add a new skill
+### 1. Create skill directory
 
 ```bash
 mkdir -p skills/my-skill
-# Create skills/my-skill/SKILL.md with YAML frontmatter
-npm version patch
+```
+
+### 2. Create SKILL.md
+
+```yaml
+---
+name: my-skill
+description: What this does. Use when [trigger condition].
+---
+
+# My Skill
+
+Instructions...
+```
+
+### 3. Test locally
+
+```bash
+npx link-skills --list
+```
+
+### 4. Commit and push
+
+```bash
+git add skills/my-skill
+git commit -m "feat: add my-skill"
 git push
 ```
 
-### Publish to Gitea registry
+Consumers using git install get updates automatically on `npm update`.
+
+### 5. Optionally publish to registry
 
 ```bash
+npm version patch
+npm run publish:gitea
+```
+
+## Publishing to Gitea Registry
+
+```bash
+# One-time setup: Add auth token to ~/.npmrc
+# Create token at: https://gitea.server.unarmedpuppy.com/user/settings/applications
+# Select "package:write" scope
+echo "//gitea.server.unarmedpuppy.com/api/packages/unarmedpuppy/npm/:_authToken=YOUR_TOKEN" >> ~/.npmrc
+
+# Publish
 npm run publish:gitea
 ```
 
@@ -75,27 +90,19 @@ npm run publish:gitea
 Skills follow the Anthropic Skills Specification:
 
 - **SKILL.md** required with YAML frontmatter
-- **name**: hyphen-case, matches directory
+- **name**: hyphen-case, matches directory name
 - **description**: includes "Use when..." trigger
-
-```yaml
----
-name: my-skill
-description: What this does. Use when [trigger].
----
-
-# My Skill
-
-Instructions...
-```
+- Keep under 500 lines
+- Optional: `scripts/`, `templates/`, `assets/`
 
 ## Boundaries
 
 ### Always Do
 - Use YAML frontmatter with `name` and `description`
-- Keep SKILL.md under 500 lines
-- Bump version before publishing
+- Include "Use when..." in description
+- Bump version before publishing to registry
 
 ### Never Do
 - Commit node_modules
 - Use README.md in skill directories (use SKILL.md)
+- Publish without testing `npx link-skills --list`
