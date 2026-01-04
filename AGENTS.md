@@ -7,7 +7,7 @@ npm package containing reusable agent skills for cross-repository use.
 
 ## Installing This Package
 
-See [personal/agents/reference/shared-skills.md](../agents/reference/shared-skills.md)
+See [home-server/agents/reference/shared-skills.md](../home-server/agents/reference/shared-skills.md)
 
 ## Directory Structure
 
