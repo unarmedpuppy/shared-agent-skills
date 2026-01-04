@@ -1,6 +1,6 @@
 {
   "name": "@jenquist/shared-agent-skills",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Shared AI agent skills for cross-repository use. Published via Harbor registry.",
   "main": "index.js",
   "bin": {
