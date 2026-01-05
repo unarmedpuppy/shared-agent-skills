@@ -2,12 +2,29 @@
 
 npm package containing reusable agent skills for cross-repository use.
 
-**Git**: `ssh://git@192.168.86.47:2223/unarmedpuppy/shared-agent-skills.git`  
+**Git**: `git@github.com:unarmedpuppy/shared-agent-skills.git`  
+**Mirror**: `ssh://git@192.168.86.47:2223/unarmedpuppy/shared-agent-skills.git` (Gitea, auto-syncs every 8h)  
 **Registry**: `gitea.server.unarmedpuppy.com`
 
 ## Installing This Package
 
 See [home-server/agents/reference/shared-skills.md](../home-server/agents/reference/shared-skills.md)
+
+## Commands
+
+```bash
+# Setup (no dependencies required)
+npm install
+
+# Validate all skills have correct format
+npm run validate
+
+# List skills and create symlinks (for testing)
+npm run link
+
+# Publish to Gitea registry
+npm version patch && npm run publish:gitea
+```
 
 ## Directory Structure
 
@@ -97,12 +114,41 @@ Skills follow the Anthropic Skills Specification:
 
 ## Boundaries
 
+### Allowed (do freely)
+- Create new skills in `skills/` directory
+- Edit existing skill content (SKILL.md, scripts, templates)
+- Add supporting files to skills (scripts/, templates/, assets/)
+- Run `npm run validate` and `npm run link`
+
+### Ask First
+- Modify `bin/` scripts (affects all consumers)
+- Change package.json (version, dependencies, scripts)
+- Modify `hooks/` (affects consuming repos)
+- Delete or rename existing skills
+
 ### Always Do
 - Use YAML frontmatter with `name` and `description`
 - Include "Use when..." in description
+- Run `npm run validate` after skill changes
 - Bump version before publishing to registry
 
 ### Never Do
 - Commit node_modules
 - Use README.md in skill directories (use SKILL.md)
 - Publish without testing `npx link-skills --list`
+- Create skills over 500 lines (split into multiple skills)
+
+## Definition of Done
+
+A skill is complete when:
+- [ ] SKILL.md has valid YAML frontmatter (`name`, `description`)
+- [ ] Description includes "Use when..." trigger condition
+- [ ] `npm run validate` passes
+- [ ] Tested with `npm run link` in a consuming repo (if applicable)
+
+## Anti-Goals
+
+Do not touch:
+- `index.js` - Simple exports, rarely needs changes
+- `agents/plans/` - Planning docs, delete when done
+- Other repos' `.agent-skills/` symlinks - Managed by consuming repos

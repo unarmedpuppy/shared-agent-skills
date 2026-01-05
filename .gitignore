@@ -20,3 +20,5 @@ Thumbs.db
 
 # Local plans (if any)
 agents/plans/local/
+# Workspace Agents
+agents/.workspace-agents.json
